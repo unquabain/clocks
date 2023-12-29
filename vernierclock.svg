@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1/EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" height="100%" viewBox="-500 -500 1000 1000" onload="init()">
+
+<circle cx="0" cy="0" r="450" fill="white"/>
+
+<script lang="text/ecmascript">
+/* Configuration Constants */
+</script>
+
+<!-- Everything else is drawn dynamically. -->
+<script lang="text/ecmascript">
+<![CDATA[
+
+const xmlns = 'http://www.w3.org/2000/svg';
+let svg = document.getElementsByTagName('svg')[0];
+var underDisk = null;
+var hourDisk = null;
+var minuteDisk = null;
+var secondsDisk = null;
+var fractionDisk = null;
+
+function draw_ray(ri, ro, theta, container)
+{
+  let th_offset = Math.PI/2
+  let path = document.createElementNS(xmlns, 'path');
+  let xi1 = Math.cos(th_offset)*ri;
+  let yi1 = Math.sin(th_offset)*ri;
+  let xi2 = Math.cos(theta + th_offset)*ri;
+  let yi2 = Math.sin(theta + th_offset)*ri;
+  let xo1 = Math.cos(th_offset)*ro;
+  let yo1 = Math.sin(th_offset)*ro;
+  let xo2 = Math.cos(theta + th_offset)*ro;
+  let yo2 = Math.sin(theta + th_offset)*ro;
+
+
+  var d = 'M' + xi1 + ',' + yi1 +
+    ' L' + xo1 + ',' + yo1 +
+    ' A ' + ro +',' + ro + ' 1 0 1 ' + xo2 + ',' + yo2 + ' ' +
+    ' L' + xi2 + ',' + yi2 + 
+    ' A ' + ri + ',' + ri + ' 1 0 1 ' + xi1 + ',' + yi1
+    ;
+  container.appendChild(path);
+  path.setAttribute('d', d);
+  path.setAttribute('class', 'ray');
+  return path;
+}
+
+function draw_ray_disk(ri, ro, n)
+{
+  let theta = Math.PI/n;
+  let container = document.createElementNS(xmlns, 'g');
+  for (var i = 0; i < n; ++i) {
+    var path = draw_ray(ri, ro, theta, container);
+    path.setAttribute('transform', 'rotate(' + (i*theta/Math.PI*360) + ')');
+  }
+  return container;
+}
+
+function currentTime()
+{
+  let now = new Date();
+  let seconds = now.getSeconds() + (now.getMilliseconds() / 1000.0);
+  let minutes = now.getMinutes() + (seconds / 60.0);
+  let hours = now.getHours() + (minutes / 60.0);
+  return { seconds: seconds, minutes: minutes, hours: hours };
+}
+
+function drawNumbers(container)
+{
+  for (i = 1; i <= 12; ++i) {
+    let a = Math.PI/6 * i - Math.PI/2;
+    let r = 475;
+    let x = Math.cos(a) * r;
+    let y = Math.sin(a) * r;
+    let tnode = document.createTextNode(i);
+    let text = document.createElementNS(xmlns, 'text');
+    text.appendChild(tnode);
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('alignment-baseline', 'middle');
+    text.setAttribute('x', x);
+    text.setAttribute('y', y);
+    // text.setAttribute('transform', 'scale(-1,-1)');
+    text.setAttribute('font-size', '36');
+    container.appendChild(text);
+  }
+}
+
+function tick()
+{
+  let time = currentTime();
+  let hourAngle = (time.hours / (12*60) * 360);
+  let minuteAngle = (time.minutes / (60*60) * 360);
+  let secondsAngle = (time.seconds / (60*60) * 360);
+  let fractionAngle = (time.seconds / (60) * 360);
+  hourDisk.setAttribute('transform', 'rotate(' + hourAngle + ')');
+  minuteDisk.setAttribute('transform', 'rotate(' + minuteAngle + ')');
+  secondsDisk.setAttribute('transform', 'rotate(' + secondsAngle + ')');
+  fractionDisk.setAttribute('transform', 'rotate(' + fractionAngle + ')');
+}
+
+function drawFace()
+{
+  underDisk = draw_ray_disk(145, 500, 59);
+  hourDisk = draw_ray_disk(150, 245, 60);
+  minuteDisk = draw_ray_disk(250, 345, 60)
+  secondsDisk = draw_ray_disk(350, 445, 60);
+  fractionDisk = draw_ray_disk(450, 495, 60);
+
+  secondsDisk.setAttribute('fill', 'black');
+  underDisk.setAttribute('fill', 'black');
+  hourDisk.setAttribute('fill', 'black');
+  minuteDisk.setAttribute('fill', 'black');
+  fractionDisk.setAttribute('fill', 'black');
+
+  svg.appendChild(underDisk);
+  svg.appendChild(hourDisk);
+  svg.appendChild(minuteDisk);
+  svg.appendChild(secondsDisk);
+  svg.appendChild(fractionDisk);
+}
+
+/* Draw everything that requires math, and start the big hand moving. */
+function init() {
+  drawFace();
+  tick();
+  setInterval(tick, 1000/15.0);
+}
+]]>
+</script>
+</svg>

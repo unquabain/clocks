@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1/EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" height="100%" viewBox="-500 -500 1000 1000" onload="init()">
+<script lang="ecmascript">
+<![CDATA[
+/* BEGIN CONFIGURATION */
+
+/* Define day limits */
+const START_TIME = 8.50; /* Time in hours. 8:30 AM is 8.5 */
+const END_TIME = 17;    /* Time in hours. 5:00 PM is 17.0 */
+const BREAKS = [        /* Array of arrays. Break from 12 to 1 is [12.0, 13.0] */
+  [12.0, 13.0],
+];
+
+/* Style and behavior constants */
+const TICKS_PER_HOUR = 4;
+const UPDATE_INTERVAL = 15; /* seconds */
+const FONT_SIZE = 96;
+const TEXT_RING_RADIUS = 325;
+const BREAK_STROKE_WIDTH = 0.05;
+
+/* END CONFIGURATION */
+
+]]></script>
+<defs>
+  <!-- Thick tick mark for hours -->
+  <path id="tick" d="M-5,-450 L5,-450 L5,-400, L-5,-400 Z" stroke="none" fill="black"/>
+
+  <!-- Thin tick marks for subdivisions of hours -->
+  <path id="tick_small" d="M-2,-440 L2,-440 L2,-410, L-2,-410 Z" stroke="none" fill="black"/>
+</defs>
+
+<!-- The ring around the clock face. -->
+<circle id="clockface" cx="0" cy="0" r="500" fill="white" stroke="black" style="stroke-width: 3;"/>
+
+<!-- The dot in the middle. -->
+<circle cx="0" cy="0" r="10" fill="black" stroke="none"/>
+
+<!-- The needle. It will be rotated in JavaScript. -->
+<path id="long_needle" d="M0,0 L-10,0 L0,-400 L10,0 Z" stroke="none" fill="black"/>
+
+<!-- Everything else is drawn dynamically. -->
+<script lang="ecmascript">
+<![CDATA[
+
+/* Pre-Calculated constants: Probably don't change these. */
+const DAY_HOURS = END_TIME - START_TIME;
+const DAY_LENGTH = DAY_HOURS * 1000 * 60 * 60;
+
+/* Cosmic constants: Probably don't change these. */
+const MINUTES_PER_HOUR = 60;
+const CIRCLE_DEGREES = 360;
+const HALF_CIRCLE_DEGREES = CIRCLE_DEGREES / 2;
+
+/* Fetch (and remember) the DOM element for the needle. */
+function longNeedle() {
+  if (this._long_needle) return this._long_needle;
+  this._long_needle = document.getElementById('long_needle');
+  return this._long_needle;
+}
+
+/* Fetch (and remember) the clock face */
+function clockFace() {
+  if (this._clock_face) return this._clock_face;
+  this._clock_face = document.getElementById('clockface');
+  return this._clock_face;
+}
+
+/* Get a Date object for the start time today in the local timezone */
+function timeStart() {
+  if (this._time_start) return this._time_start;
+  let now = new Date();
+  let start_hours = Math.floor(START_TIME);
+  let start_minutes = MINUTES_PER_HOUR * (START_TIME - start_hours)
+  return this._time_start = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+    start_hours, start_minutes
+  );
+}
+
+/* Move the long needle to its proportionate position */
+function moveHands() {
+  let now = new Date();
+  let elapsed = now - timeStart();
+  let a = ( elapsed / DAY_LENGTH) * CIRCLE_DEGREES;
+  longNeedle().setAttribute('transform', 'rotate(' + a + ')');
+  if (a >= 0 && a <= CIRCLE_DEGREES) {
+    clockFace().setAttribute('fill', 'white');
+  } else {
+    clockFace().setAttribute('fill', '#8888FF');
+  }
+}
+
+/* Helper for making a <use> and linking it to the right def */
+function makeUse(link)
+{
+    var el = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+    el.setAttribute('href', '#' + link);
+    document.getElementsByTagName('svg')[0].appendChild(el);
+    return el
+}
+
+/* Just format a number as an hour */
+function hourToText(hour)
+{
+    var hour12 = (Math.floor(hour) - 1) % 12 + 1;
+    let minute = (hour - Math.floor(hour)) * MINUTES_PER_HOUR;
+    if (minute > 0) hour12 = hour12 + ":" + minute;
+    return hour12;
+}
+
+/* Write the number of an our at the right angle */
+function writeHour(hour, angle)
+{
+    var el = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    let hour12 = hourToText(hour);
+
+    var tnode = document.createTextNode(hour12);
+    let a = angle / HALF_CIRCLE_DEGREES * Math.PI - (Math.PI / 2.0);
+    let r = TEXT_RING_RADIUS;
+    let x = Math.cos(a) * r;
+    let y = Math.sin(a) * r;
+    el.appendChild(tnode);
+    el.setAttribute('font-size', FONT_SIZE);
+    el.setAttribute('text-anchor', 'middle');
+    el.setAttribute('alignment-baseline', 'middle');
+    el.setAttribute('x', x);
+    el.setAttribute('y', y);
+
+    document.getElementsByTagName('svg')[0].appendChild(el);
+}
+
+/* Draw all the constant tick marks and things */
+function drawFace() {
+  let numTicks = DAY_HOURS * TICKS_PER_HOUR;
+  let minorDelta = CIRCLE_DEGREES / numTicks;
+  for (var i = 1; i <= numTicks; i++) {
+    var klass = 'tick_small';
+    let a = i * minorDelta;
+    let offset = (START_TIME - Math.floor(START_TIME)) * TICKS_PER_HOUR;
+    if ((i + offset) % TICKS_PER_HOUR == 0 || i == numTicks) {
+      klass = 'tick'
+      writeHour((i / TICKS_PER_HOUR) + START_TIME, a);
+    }
+    var el = makeUse(klass);
+    el.setAttribute('transform', 'rotate(' + a + ')');
+  }
+}
+
+/* Draw shaded arcs for each element in the BREAKS array */
+function drawBreaks() {
+  for (var i = 0; i < BREAKS.length; i++) {
+    let thisBreak = BREAKS[i];
+    let break_start = thisBreak[0];
+    let break_end = thisBreak[1];
+    let start_angle = ((break_start - START_TIME) / DAY_HOURS) * Math.PI * 2;
+    let end_angle = ((break_end - START_TIME) / DAY_HOURS) * Math.PI * 2;
+    let start_x = Math.cos(start_angle);
+    let start_y = Math.sin(start_angle);
+    let end_x = Math.cos(end_angle);
+    let end_y = Math.sin(end_angle);
+    let d ='M ' + start_x + ',' + start_y + ' A 1,1 1 0 1 ' + end_x + ',' + end_y
+    let path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    let ci = i + 1;
+    let color = (ci & 0x1) * 0xFF + (ci & 0x2) * 0xFF00 + (ci & 0x4) * 0xFF0000;
+    path.setAttribute('d', d);
+    path.setAttribute('transform', 'scale(425) rotate(-90)');
+    path.setAttribute('fill','none');
+    path.setAttribute('stroke', '#' + color.toString(16).padStart(6, '0') + '44');
+    path.setAttribute('stroke-width', BREAK_STROKE_WIDTH);
+    document.getElementsByTagName('svg')[0].appendChild(path);
+  }
+}
+
+/* Draw everything that requires math, and start the big hand moving. */
+function init() {
+  drawBreaks();
+  drawFace();
+  moveHands();
+  setInterval(moveHands, 1000 * UPDATE_INTERVAL);
+}
+]]>
+</script>
+</svg>

@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1/EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" height="100%" viewBox="-300 -150 600 300" onload="init()">
+
+<defs>
+  <g id="spinner">
+    <path d="M50, 0 A 50,50 1 1 1 -50,0 Z" stroke="none" fill="black"/>
+    <path d="M-50, 0 A 50,50 1 1 1 50,0 Z" stroke="none" fill="white"/>
+  </g>
+
+  <path id="mask" d='M-50,-50 L50,-50 L50,50 L-50,50 z M5,5 L45,10 L45,-10 L5,-5 z'/>
+
+  <g id="masks" style="fill: #EEEEFFEE; fill-rule: evenodd;">
+    <use href="#mask" x="250" y="100"/>
+    <use href="#mask" x="150" y="100"/>
+    <use href="#mask" x="50" y="100"/>
+    <use href="#mask" x="-50" y="100"/>
+    <use href="#mask" x="-150" y="100"/>
+    <use href="#mask" x="-250" y="100"/>
+
+    <use href="#mask" x="250" y="0"/>
+    <use href="#mask" x="150" y="0"/>
+    <use href="#mask" x="50" y="0"/>
+    <use href="#mask" x="-50" y="0"/>
+    <use href="#mask" x="-150" y="0"/>
+    <use href="#mask" x="-250" y="0"/>
+
+    <use href="#mask" x="250" y="-100"/>
+    <use href="#mask" x="150" y="-100"/>
+    <use href="#mask" x="50" y="-100"/>
+    <use href="#mask" x="-50" y="-100"/>
+    <use href="#mask" x="-150" y="-100"/>
+    <use href="#mask" x="-250" y="-100"/>
+  </g>
+</defs>
+
+<rect x="-300" y="-150" width="600" height="300" fill="blue"/>
+
+<g transform="translate(250,100)"><use href="#spinner" id="seconds_1"/></g>
+<g transform="translate(150, 100)"><use href="#spinner" id="seconds_2"/></g>
+<g transform="translate(50, 100)"><use href="#spinner" id="seconds_4"/></g>
+<g transform="translate(-50, 100)"><use href="#spinner" id="seconds_8"/></g>
+<g transform="translate(-150, 100)"><use href="#spinner" id="seconds_16"/></g>
+<g transform="translate(-250, 100)"><use href="#spinner" id="seconds_32"/></g>
+
+<g transform="translate(250,0)"><use href="#spinner" id="minutes_1"/></g>
+<g transform="translate(150, 0)"><use href="#spinner" id="minutes_2"/></g>
+<g transform="translate(50, 0)"><use href="#spinner" id="minutes_4"/></g>
+<g transform="translate(-50, 0)"><use href="#spinner" id="minutes_8"/></g>
+<g transform="translate(-150, 0)"><use href="#spinner" id="minutes_16"/></g>
+<g transform="translate(-250, 0)"><use href="#spinner" id="minutes_32"/></g>
+
+<g transform="translate(250, -100)"><use href="#spinner" id="hours_1"/></g>
+<g transform="translate(150, -100)"><use href="#spinner" id="hours_2"/></g>
+<g transform="translate(50, -100)"><use href="#spinner" id="hours_4"/></g>
+<g transform="translate(-50, -100)"><use href="#spinner" id="hours_8"/></g>
+<g transform="translate(-150, -100)"><use href="#spinner" id="hours_16"/></g>
+<g transform="translate(-250, -100)"><use href="#spinner" id="hours_32"/></g>
+
+<use href="#masks"/>
+
+<script lang="text/ecmascript">
+/* Configuration Constants */
+</script>
+
+<!-- Everything else is drawn dynamically. -->
+<script lang="text/ecmascript">
+
+function spin(id, a)
+{
+  let el = document.getElementById(id);
+  el.setAttribute('transform', 'rotate(' + (a%360) + ')');
+}
+
+function tick()
+{
+  let now = new Date();
+  let seconds = now.getSeconds() + (now.getMilliseconds() / 1000.0);
+  let minutes = now.getMinutes() + (seconds / 60.0) 
+  let hours = now.getHours() + (minutes / 60.0)
+
+  spin('seconds_1', seconds * 180 / 1.0);
+  spin('seconds_2', seconds * 180 / 2.0);
+  spin('seconds_4', seconds * 180 / 4.0);
+  spin('seconds_8', seconds * 180 / 8.0);
+  spin('seconds_16', seconds * 180 / 16.0);
+  spin('seconds_32', seconds * 180 / 32.0);
+
+  spin('minutes_1', minutes * 180 / 1.0);
+  spin('minutes_2', minutes * 180 / 2.0);
+  spin('minutes_4', minutes * 180 / 4.0);
+  spin('minutes_8', minutes * 180 / 8.0);
+  spin('minutes_16', minutes * 180 / 16.0);
+  spin('minutes_32', minutes * 180 / 32.0);
+
+  spin('hours_1', hours * 180 / 1.0);
+  spin('hours_2', hours * 180 / 2.0);
+  spin('hours_4', hours * 180 / 4.0);
+  spin('hours_8', hours * 180 / 8.0);
+  spin('hours_16', hours * 180 / 16.0);
+  spin('hours_32', hours * 180 / 32.0);
+}
+
+/* Draw everything that requires math, and start the big hand moving. */
+function init() {
+  tick();
+  setInterval(tick, 1000/60.0);
+}
+</script>
+</svg>

@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1/EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" height="100%" viewBox="-500 -500 1000 1000" onload="init()">
+<script type="text/ecmascript"><![CDATA[
+/* CONFIGURATION CONSTANTS */
+const FRAME_RATE = 30; // FPS
+]]></script>
+<script type="text/ecmascript" href="libclocks.js"></script>
+<rect x="-500" y="-500" width="1000" height="1000" fill="#EEE8CC"/>
+
+<style type="text/css"><![CDATA[
+]]></style>
+
+<defs>
+  <g id="mask">
+    <path fill="none" stroke="red" stroke-width="0.01"
+      d="M0, -0.2 L 0,-1"/>
+    <path fill="#EEEEEE" stroke="black" stroke-width="0.01" opacity="0.975" fill-rule="evenodd"
+      d="M 0   , -1.2
+         L-1.2 , -1.2
+         L-1.2 ,  1.2
+         L 1.2 ,  1.2
+         L 1.2 , -1.2
+         L 0   , -1.2
+         
+         M-0.1, -0.2
+         L-0.1, -1
+         L 0.1, -1
+         L 0.1, -0.2
+         L-0.1, -0.2"/>
+  </g>
+</defs>
+
+<script type="text/ecmascript"><![CDATA[
+
+let secondsCounter;
+let minutesCounter;
+let hoursCounter;
+
+function drawWheel(segments) {
+  const innerRadius = 0.2;
+  const barArea = 1 - innerRadius;
+  let g = makeA('g');
+  let c = makeA('circle');
+  g.appendChild(c);
+  setAttributes(c, {
+    cx: 0,
+    cy: 0,
+    r: 1.01,
+    fill: 'white',
+    stroke: 'black',
+    'stroke-width': '0.01'
+  });
+
+  let path = new Path();
+  path.M(0, 0);
+
+  for (var i = 0; i < segments; i++)
+  {
+    let diameter = innerRadius + (barArea / (segments - 1) * i);
+    let startAngle = -2*Math.PI / segments * i - Math.PI/2;
+    let endAngle = -2*Math.PI / segments * (i + 1) - Math.PI/2;
+    let startx = Math.cos(startAngle) * diameter;
+    let starty = Math.sin(startAngle) * diameter;
+    let endx = Math.cos(endAngle) * diameter;
+    let endy = Math.sin(endAngle) * diameter;
+    path
+      .L(startx, starty)
+      .A(diameter, diameter, 0, 0, 0, endx, endy)
+  }
+  path.Z()
+  g.appendChild(path.toEl());
+  return g;
+}
+
+function graduateMask(mask, divisions, multiple) {
+  for (var i = 1; i < divisions; ++i) {
+    let height = 0.2 + (0.8 / (divisions-1) * i);
+    let p = new Path().M(0.15, - height).L(0.25, - height).toEl();
+    setAttributes(p, {fill: 'none', stroke: 'red', 'stroke-width': 0.01})
+    mask.appendChild(p);
+    label = write(i*multiple, 0.4, -height, 0.2);
+    label.setAttribute('fill', 'red');
+    mask.appendChild(label);
+  }
+  return mask;
+}
+
+function Counter60()
+{
+  const spread = 2.6;
+  this.el = makeA('g');
+
+  this.wheel15 = drawWheel(4);
+  var g = makeA('g'); g.appendChild(this.wheel15);
+  g.setAttribute('transform', 'translate(' + -spread + ',0)')
+  this.el.appendChild(g);
+
+  this.wheel5 = drawWheel(3);
+  g = makeA('g'); g.appendChild(this.wheel5);
+  g.setAttribute('transform', 'translate(0,0)')
+  this.el.appendChild(g);
+
+  this.wheel1 = drawWheel(5);
+  g = makeA('g'); g.appendChild(this.wheel1);
+  g.setAttribute('transform', 'translate(' + spread + ',0)')
+  this.el.appendChild(g);
+
+  this.el.appendChild(
+    graduateMask(
+      use('mask', {transform: 'translate(' + -spread + ',0)'}),
+      4, 15
+    )
+  );
+  this.el.appendChild(
+    graduateMask(
+      use('mask', {transform: 'translate(0,0)'}),
+      3, 5
+    )
+  );
+  this.el.appendChild(
+    graduateMask(
+      use('mask', {transform: 'translate(' + spread + ',0)'}),
+      5, 1
+    )
+  );
+
+  this.setValue = function(val) {
+    let v = ((val % 60) / 60) * 360;
+    this.wheel15.setAttribute('transform', 'rotate(' + v + ')');
+
+    v = (v * 4) % 360;
+    this.wheel5.setAttribute('transform', 'rotate(' + v + ')');
+
+    v = (v * 3) % 360;
+    this.wheel1.setAttribute('transform', 'rotate(' + v + ')');
+  }
+
+  this.draw = function(root, x, y, scale) {
+    this.el.setAttribute('transform', 'translate(' + x + ',' + y + ') scale(' + scale + ')');
+    root.appendChild(this.el);
+  }
+
+  return this;
+}
+
+function Counter24()
+{
+  const spread = 2.6;
+  this.el = makeA('g');
+
+  this.wheelAP = drawWheel(2);
+  var g = makeA('g'); g.appendChild(this.wheelAP);
+  g.setAttribute('transform', 'translate(-' + spread + ',0)')
+  this.el.appendChild(g);
+
+  this.wheelQuarter = drawWheel(4);
+  g = makeA('g'); g.appendChild(this.wheelQuarter);
+  g.setAttribute('transform', 'translate(0,0)')
+  this.el.appendChild(g);
+
+  this.wheelHour = drawWheel(3);
+  g = makeA('g'); g.appendChild(this.wheelHour);
+  g.setAttribute('transform', 'translate(' + spread + ',0)')
+  this.el.appendChild(g);
+
+  this.el.appendChild(
+    graduateMask(
+      use('mask', {transform: 'translate(-' + spread + ',0)'}),
+      2, 12
+    )
+  );
+  this.el.appendChild(
+    graduateMask(
+      use('mask', {transform: 'translate(0,0)'}),
+      4, 3
+    )
+  );
+  this.el.appendChild(
+    graduateMask(
+      use('mask', {transform: 'translate(' + spread + ',0)'}),
+      3, 1
+    )
+  );
+
+  this.setValue = function(val) {
+    let v = ((val % 24) / 24) * 360;
+    this.wheelAP.setAttribute('transform', 'rotate(' + v + ')');
+
+    v = (v * 2) % 360;
+    this.wheelQuarter.setAttribute('transform', 'rotate(' + v + ')');
+
+    v = (v * 4) % 360;
+    this.wheelHour.setAttribute('transform', 'rotate(' + v + ')');
+  }
+
+  this.draw = function(root, x, y, scale) {
+    this.el.setAttribute('transform', 'translate(' + x + ',' + y + ') scale(' + scale + ')');
+    root.appendChild(this.el);
+  }
+
+  return this;
+}
+
+function drawFace() {
+  /* One-time initialization */
+  secondsCounter = new Counter60();
+  secondsCounter.draw(clockFace, 0, 325, 125);
+
+  minutesCounter = new Counter60();
+  minutesCounter.draw(clockFace, 0, 0, 125);
+
+  hoursCounter = new Counter24();
+  hoursCounter.draw(clockFace, 0, -325, 125);
+}
+
+function tick() {
+  /* Run every 1/FRAME_RATE seconds to update the time */
+  let now = currentTime();
+  secondsCounter.setValue(now.sec.f);
+  minutesCounter.setValue(now.min.f);
+  hoursCounter.setValue(now.hr.f);
+}
+]]></script>
+
+</svg>

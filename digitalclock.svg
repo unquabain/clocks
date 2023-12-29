@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1/EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" height="100%" viewBox="-280 -120 560 240" onload="init()">
+
+<rect x='-280' y='-120' width='560' height='240' fill="black"/>
+
+<style type="text/css">
+
+.digit path,
+.colon.off
+{
+	fill: cyan;
+  opacity: 0.2;
+  transition: opacity 1.5s;
+}
+.digit.digit0 .digit0,
+.digit.digit1 .digit1,
+.digit.digit2 .digit2,
+.digit.digit3 .digit3,
+.digit.digit4 .digit4,
+.digit.digit5 .digit5,
+.digit.digit6 .digit6,
+.digit.digit7 .digit7,
+.digit.digit8 .digit8,
+.digit.digit9 .digit9,
+.colon.on
+{
+	fill: cyan;
+  opacity: 1;
+  transition: opacity 0.2s;
+}
+</style>
+
+<script type="text/ecmascript">
+<![CDATA[
+const xmlns = 'http://www.w3.org/2000/svg';
+let svg = document.getElementsByTagName('svg')[0];
+let hours10 = null;
+let hours1 = null;
+let minutes10 = null;
+let minutes1 = null;
+let seconds10 = null;
+let seconds1 = null;
+let colon1 = null;
+let colon2 = null;
+
+function make_a(what)
+{
+	return document.createElementNS(xmlns,what);
+}
+
+function drawDigit(x, y, id)
+{
+	const segpath='M-5,20 L-5,-20 L0,-25 L5,-20 L5,20 L0,25z';
+	const midsegpath='M-25,0 L-20,-5 L20,-5 L25,0 L20,5 L-20,5z';
+  let g = make_a('g');
+  let ms = make_a('path');
+  ms.setAttribute('d',midsegpath);
+  ms.setAttribute('class', 'digit2 digit3 digit4 digit5 digit6 digit8 digit9');
+  g.appendChild(ms);
+  let segments = [
+    [
+      "translate(0, -52) rotate(-90)",
+      "digit2 digit3 digit5 digit6 digit7 digit8 digit9 digit0"
+    ],[
+      "translate(-26, -26) scale(-1,1)",
+      "digit4 digit5 digit6 digit8 digit9 digit0"
+    ],[
+      "translate(26, -26)",
+      "digit1 digit2 digit3 digit4 digit7 digit8 digit9 digit0"
+    ],[
+      "translate(-26, 26) scale(-1,1)",
+      "digit2 digit6 digit8 digit0"
+    ],[
+      "translate(26, 26)",
+      "digit1 digit3 digit4 digit5 digit6 digit7 digit8 digit9 digit0"
+    ],[
+      "translate(0, 52) rotate(90)",
+      "digit2 digit3 digit5 digit6 digit8 digit9 digit0"
+    ]
+  ];
+  for (i = 0; i < segments.length; ++i) {
+    let s = make_a('path');
+    s.setAttribute('d', segpath);
+    s.setAttribute('transform', segments[i][0]);
+    s.setAttribute('class', segments[i][1]);
+    g.appendChild(s);
+  }
+  g.setAttribute('transform', 'translate(' + x + ', ' + y + ')');
+  g.setAttribute('id', id);
+  g.setAttribute('class', 'digit');
+  return g;
+}
+
+function drawColon(x, y)
+{
+  let g = make_a('g');
+  let r1 = make_a('rect');
+  let r2 = make_a('rect');
+  r1.setAttribute('x', -5 + x);
+  r1.setAttribute('y', -15 + y);
+  r1.setAttribute('width', 10);
+  r1.setAttribute('height', 10);
+
+  r2.setAttribute('x', -5 + x);
+  r2.setAttribute('y', 15 + y);
+  r2.setAttribute('width', 10);
+  r2.setAttribute('height', 10);
+
+  g.appendChild(r1);
+  g.appendChild(r2);
+  g.setAttribute('class', 'colon on');
+  return g;
+}
+
+function add(el)
+{
+  svg.appendChild(el);
+  return el;
+}
+
+function drawFace()
+{
+  hours10 = add(drawDigit(-220, 0, 'hours10'));  
+  hours1 = add(drawDigit(-140, 0, 'hours1'));  
+  minutes10 = add(drawDigit(-40, 0, 'minutes10'));  
+  minutes1 = add(drawDigit(40, 0, 'minutes1'));  
+  seconds10 = add(drawDigit(140, 0, 'seconds10'));  
+  seconds1 = add(drawDigit(220, 0, 'seconds1'));  
+
+  colon1 = add(drawColon(-90, 0));
+  colon2 = add(drawColon(90, 0));
+}
+
+function tick()
+{
+  let now = new Date();
+  let h1 = now.getHours() % 10;
+  let h10 = (now.getHours() - h1)/10;
+
+  let m1 = now.getMinutes() % 10;
+  let m10 = (now.getMinutes() - m1)/10;
+
+  let s1 = now.getSeconds() % 10;
+  let s10 = (now.getSeconds() - s1)/10;
+
+  hours10.setAttribute('class', 'digit digit' + h10);
+  hours1.setAttribute('class', 'digit digit' + h1);
+
+  minutes10.setAttribute('class', 'digit digit' + m10);
+  minutes1.setAttribute('class', 'digit digit' + m1);
+
+  seconds10.setAttribute('class', 'digit digit' + s10);
+  seconds1.setAttribute('class', 'digit digit' + s1);
+
+  if (now.getMilliseconds() < 250) {
+    colon1.setAttribute('class', 'colon on');
+    colon2.setAttribute('class', 'colon on');
+  } else {
+    colon1.setAttribute('class', 'colon off');
+    colon2.setAttribute('class', 'colon off');
+  }
+}
+
+function init()
+{
+  drawFace();
+  tick();
+  setInterval(tick, 1000/10);
+}
+]]>
+</script>
+
+</svg>

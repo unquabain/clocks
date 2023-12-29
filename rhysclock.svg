@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1/EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" height="100%" viewBox="-500 -500 1000 1000" onload="init()">
+
+<defs>
+  <rect id="hour_tick" x="-5" y="-475" width="10" height="50" fill="black" stroke="white" line-width="3"/>
+</defs>
+
+<circle x="0" y="0" r="500" style="stroke: black; line-width: 5; fill: black;"/>
+<g id="numbers"/>
+
+<path id="second_hand" style="fill: blue;" d="M-10,0 L-5,-450 L5,-450 L10,0 z"/>
+<path id="minute_hand" style="fill: gold;" d="M-10,0 L-5,-350 L5,-350 L10,0 z"/>
+<path id="hour_hand" style="fill: pink;" d="M-10,0 L-5,-250 L5,-250 L10,0 z"/>
+
+<circle x="0" y="0" r="75" style="fill: green;"/>
+<text text-anchor="middle" alignment-baseline="middle" fill="white" font-size="32" y="-32">Rhys</text>
+<text text-anchor="middle" alignment-baseline="middle" fill="white" font-size="32">Forsberg</text>
+<text id="year" text-anchor="middle" alignment-baseline="middle" fill="white" font-size="32" y="38"></text>
+
+<foreignObject width="200" height="200" 
+     x="450" y="-450"
+     requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+   <p style="background-color: cyan; padding: 12pt; font-size: 24pt;" xmlns="http://www.w3.org/1999/xhtml">Rhys and Ben made this in 2019.</p>
+</foreignObject>
+
+<script lang="text/ecmascript">
+/* Configuration Constants */
+</script>
+
+<!-- Everything else is drawn dynamically. -->
+<script lang="text/ecmascript">
+<![CDATA[
+
+var svg = document.getElementsByTagName('svg')[0];
+var numbers = document.getElementById('numbers');
+var secondHand = document.getElementById('second_hand');
+var minuteHand = document.getElementById('minute_hand');
+var hourHand = document.getElementById('hour_hand');
+var year = document.getElementById('year');
+
+function tick()
+{
+  let now = new Date();
+  let seconds = now.getSeconds() + feather(now.getMilliseconds()/1000.0);
+  let minutes = now.getMinutes() + seconds / 60.0;
+  let hours = now.getHours() + minutes / 60.0;
+
+  secondHand.setAttribute('transform', 'rotate(' + (seconds/60.0)*360 + ')');
+  minuteHand.setAttribute('transform', 'rotate(' + (minutes/60.0)*360 + ')');
+  hourHand.setAttribute('transform', 'rotate(' + (hours/12.0)*360 + ')');
+}
+
+function drawFace()
+{
+  for (var i = 1; i <= 12; i++) {
+    let text = document.createTextNode(i);
+    let tnode = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    let a = i / 6.0 * Math.PI - (Math.PI / 2);
+    const r = 350;
+    let x = Math.cos(a)*r;
+    let y = Math.sin(a)*r;
+    tnode.appendChild(text);
+    numbers.appendChild(tnode);
+    tnode.setAttribute('fill', 'black');
+    tnode.setAttribute('stroke', 'white');
+    tnode.setAttribute('line-width', '3');
+    tnode.setAttribute('font-size', '96');
+    tnode.setAttribute('text-anchor', 'middle');
+    tnode.setAttribute('alignment-baseline', 'middle');
+    tnode.setAttribute('x', x);
+    tnode.setAttribute('y', y);
+
+    let tick = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+    tick.setAttribute('href', '#hour_tick');
+    tick.setAttribute('transform', 'rotate(' + (a/Math.PI*180) + ')');
+    numbers.appendChild(tick);
+  }
+
+  var yearText = document.createTextNode(new Date().getFullYear());
+  year.appendChild(yearText);
+}
+
+function feather(i)
+{
+  return 3*i*i - 2*i*i*i;
+}
+
+/* Draw everything that requires math, and start the big hand moving. */
+function init() {
+  drawFace();
+  tick();
+  setInterval(tick, 1000/60.0);
+}
+]]>
+</script>
+</svg>
